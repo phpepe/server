@@ -25,6 +25,9 @@ var stats = {
     tunnels: 0
 };
 
+// are we serving from a subdomain?
+var sub = false; 
+
 function maybe_bounce(req, res, bounce) {
     // without a hostname, we won't know who the request is for
     var hostname = req.headers.host;
@@ -33,6 +36,12 @@ function maybe_bounce(req, res, bounce) {
     }
 
     var subdomain = tldjs.getSubdomain(hostname);
+    // if we're serving from a subdomain do a proper check
+    if (sub) {
+        var subsub = (subdomain || '').split('.');
+        subdomain = subsub.length > 1 ? subsub[0] : '';
+    }
+
     if (!subdomain) {
         return false;
     }
@@ -143,6 +152,8 @@ module.exports = function(opt) {
     opt = opt || {};
 
     var schema = opt.secure ? 'https' : 'http';
+
+    sub = opt.sub || false;
 
     var app = express();
 
